@@ -62,7 +62,7 @@ Initialize the CSS token/theme foundation close to the screenshots. No AI integr
 Do not copy generated HTML. Do not include embedded font files.
 ```
 
-## PROMPT 1 — Build visual shell and seeded demo screens 
+## PROMPT 1 — Build visual shell and seeded demo screens — DONE
 
 ```text
 Implement M1, the design foundation and navigable vertical slice, using 02-DESIGN-IMPLEMENTATION-BRIEF.md and supplied screen PNGs as visual reference.

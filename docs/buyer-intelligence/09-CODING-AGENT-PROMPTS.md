@@ -42,7 +42,7 @@ Working method:
 
 ---
 
-## PROMPT 0 — Inspect, scaffold and propose technical contracts
+## PROMPT 0 — Inspect, scaffold and propose technical contracts — DONE
 
 ```text
 Start Milestone M0. Inspect the repository; do not assume it is empty. Read the Buyer Intelligence handoff. Review all nine screenshots and their design-screen mapping. Identify existing packages, routing, auth, migrations and test setup.
@@ -62,7 +62,7 @@ Initialize the CSS token/theme foundation close to the screenshots. No AI integr
 Do not copy generated HTML. Do not include embedded font files.
 ```
 
-## PROMPT 1 — Build visual shell and seeded demo screens
+## PROMPT 1 — Build visual shell and seeded demo screens — DONE
 
 ```text
 Implement M1, the design foundation and navigable vertical slice, using 02-DESIGN-IMPLEMENTATION-BRIEF.md and supplied screen PNGs as visual reference.
