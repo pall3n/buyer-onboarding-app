@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type KeyboardEvent } from 'react'
 import { LazyMotion, domAnimation, m } from 'motion/react'
 import { cn } from '@/lib/utils'
 
@@ -8,9 +8,11 @@ export type VoiceState = 'idle' | 'listening' | 'thinking' | 'speaking' | 'error
 
 interface VoiceDockProps {
   className?: string
+  onSubmit?: (text: string) => void
+  isDisabled?: boolean
 }
 
-export function VoiceDock({ className }: VoiceDockProps) {
+export function VoiceDock({ className, onSubmit, isDisabled }: VoiceDockProps) {
   const [state, setState] = useState<VoiceState>('idle')
   const [reducedMotion, setReducedMotion] = useState<boolean>(
     () =>
@@ -48,7 +50,13 @@ export function VoiceDock({ className }: VoiceDockProps) {
               'w-full max-w-lg rounded-2xl border border-[var(--bi-line)] bg-[var(--bi-surface)] shadow-sm'
           )}
         >
-          {state === 'idle' && <IdleContent onMicClick={() => setState('listening')} />}
+          {state === 'idle' && (
+            <IdleContent
+              onMicClick={() => setState('listening')}
+              onSubmit={onSubmit}
+              isDisabled={isDisabled}
+            />
+          )}
           {state === 'listening' && (
             <ListeningContent
               onCancel={() => setState('idle')}
@@ -71,21 +79,59 @@ export function VoiceDock({ className }: VoiceDockProps) {
 
 // ─── Idle ──────────────────────────────────────────────────────────────────
 
-function IdleContent({ onMicClick }: { onMicClick: () => void }) {
+function IdleContent({
+  onMicClick,
+  onSubmit,
+  isDisabled,
+}: {
+  onMicClick: () => void
+  onSubmit?: (text: string) => void
+  isDisabled?: boolean
+}) {
+  const [value, setValue] = useState('')
+
+  function handleSubmit() {
+    const trimmed = value.trim()
+    if (!trimmed || isDisabled) return
+    onSubmit?.(trimmed)
+    setValue('')
+  }
+
+  function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter') handleSubmit()
+  }
+
   return (
     <div className="flex items-center gap-3 px-4 py-3">
       <input
         type="text"
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        disabled={isDisabled}
         placeholder="Type a message…"
-        className="flex-1 bg-transparent text-sm text-[var(--bi-ink)] placeholder:text-[var(--bi-muted)] focus:outline-none"
+        className="flex-1 bg-transparent text-sm text-[var(--bi-ink)] placeholder:text-[var(--bi-muted)] focus:outline-none disabled:opacity-50"
       />
-      <button
-        onClick={onMicClick}
-        aria-label="Start voice input"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--bi-sage)] text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--bi-sage)]"
-      >
-        <MicIcon />
-      </button>
+      {value.trim() && (
+        <button
+          onClick={handleSubmit}
+          disabled={isDisabled}
+          aria-label="Send message"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--bi-sage)] text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--bi-sage)] disabled:opacity-50"
+        >
+          <SendIcon />
+        </button>
+      )}
+      {!value.trim() && (
+        <button
+          onClick={onMicClick}
+          disabled={isDisabled}
+          aria-label="Start voice input"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--bi-sage)] text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--bi-sage)] disabled:opacity-50"
+        >
+          <MicIcon />
+        </button>
+      )}
     </div>
   )
 }
@@ -218,6 +264,20 @@ function MicIcon() {
     >
       <path d="M12 1a4 4 0 0 0-4 4v6a4 4 0 0 0 8 0V5a4 4 0 0 0-4-4Z" />
       <path d="M19 11a1 1 0 1 0-2 0 5 5 0 0 1-10 0 1 1 0 1 0-2 0 7 7 0 0 0 6 6.93V20H9a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-2.07A7 7 0 0 0 19 11Z" />
+    </svg>
+  )
+}
+
+function SendIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className="h-4 w-4"
+      aria-hidden="true"
+    >
+      <path d="M12 4a1 1 0 0 1 .707.293l7 7a1 1 0 0 1-1.414 1.414L13 7.414V19a1 1 0 1 1-2 0V7.414l-5.293 5.293a1 1 0 0 1-1.414-1.414l7-7A1 1 0 0 1 12 4Z" />
     </svg>
   )
 }

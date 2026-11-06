@@ -2,8 +2,6 @@ import Link from 'next/link'
 import { PrintActions } from '@/components/agency/PrintActions'
 import { DEMO_VIEWING_BRIEF, DEMO_NAV_IDS } from '@/lib/demo-data'
 
-export const instant = false
-
 export default async function ViewingBriefPage(
   props: { params: Promise<{ briefId: string }> }
 ) {

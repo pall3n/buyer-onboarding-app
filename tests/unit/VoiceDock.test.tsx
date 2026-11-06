@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { VoiceDock } from '@/components/buyer/VoiceDock'
 
@@ -39,5 +39,62 @@ describe('VoiceDock', () => {
     // Cancel
     fireEvent.click(screen.getByRole('button', { name: 'Cancel voice input' }))
     expect(container.querySelector('[data-voice-state]')?.getAttribute('data-voice-state')).toBe('idle')
+  })
+
+  // onSubmit + isDisabled tests
+  it('calls onSubmit with input value on Enter key', () => {
+    const onSubmit = vi.fn()
+    render(<VoiceDock onSubmit={onSubmit} />)
+    const input = screen.getByPlaceholderText('Type a message…')
+    fireEvent.change(input, { target: { value: 'Hello there' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(onSubmit).toHaveBeenCalledWith('Hello there')
+  })
+
+  it('calls onSubmit on send button click', () => {
+    const onSubmit = vi.fn()
+    render(<VoiceDock onSubmit={onSubmit} />)
+    const input = screen.getByPlaceholderText('Type a message…')
+    fireEvent.change(input, { target: { value: 'Send this' } })
+    const sendButton = screen.getByRole('button', { name: 'Send message' })
+    fireEvent.click(sendButton)
+    expect(onSubmit).toHaveBeenCalledWith('Send this')
+  })
+
+  it('clears input after submission', () => {
+    const onSubmit = vi.fn()
+    render(<VoiceDock onSubmit={onSubmit} />)
+    const input = screen.getByPlaceholderText('Type a message…') as HTMLInputElement
+    fireEvent.change(input, { target: { value: 'Clear me' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(input.value).toBe('')
+  })
+
+  it('send button is not rendered when input is empty', () => {
+    render(<VoiceDock />)
+    expect(screen.queryByRole('button', { name: 'Send message' })).toBeNull()
+  })
+
+  it('shows mic button when input is empty', () => {
+    render(<VoiceDock />)
+    expect(screen.getByRole('button', { name: 'Start voice input' })).toBeInTheDocument()
+  })
+
+  it('disables input and buttons when isDisabled is true', () => {
+    render(<VoiceDock isDisabled onSubmit={vi.fn()} />)
+    const input = screen.getByPlaceholderText('Type a message…') as HTMLInputElement
+    expect(input.disabled).toBe(true)
+    // Mic button should be disabled
+    const micButton = screen.getByRole('button', { name: 'Start voice input' })
+    expect(micButton).toBeDisabled()
+  })
+
+  it('does not call onSubmit when isDisabled is true', () => {
+    const onSubmit = vi.fn()
+    render(<VoiceDock isDisabled onSubmit={onSubmit} />)
+    const input = screen.getByPlaceholderText('Type a message…')
+    fireEvent.change(input, { target: { value: 'Try to send' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(onSubmit).not.toHaveBeenCalled()
   })
 })

@@ -2,8 +2,6 @@ import Link from 'next/link'
 import { DemoBanner } from '@/components/shared/DemoBanner'
 import { DEMO_NAV_IDS } from '@/lib/demo-data'
 
-export const instant = false
-
 export default async function SharedPage(
   props: { params: Promise<{ opaqueId: string }> }
 ) {

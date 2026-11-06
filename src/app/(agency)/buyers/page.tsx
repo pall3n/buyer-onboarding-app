@@ -17,14 +17,12 @@ export default function BuyersPage() {
               Tuesday, 29 October 2024
             </p>
           </div>
-          <button
-            disabled
-            title="Invite flow coming in M2"
-            aria-disabled="true"
-            className="rounded-xl border border-[var(--bi-line)] bg-[var(--bi-surface)] px-4 py-2 text-sm text-[var(--bi-muted)] cursor-not-allowed opacity-50"
+          <Link
+            href="/buyers/invite"
+            className="rounded-xl border border-[var(--bi-line)] bg-[var(--bi-surface)] px-4 py-2 text-sm text-[var(--bi-ink)] transition-colors hover:border-[var(--bi-sage)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--bi-sage)]"
           >
             Invite buyer
-          </button>
+          </Link>
         </div>
 
         {/* Ready to read */}

@@ -7,8 +7,6 @@ import {
   type BuyerProfile,
 } from '@/lib/demo-data'
 
-export const instant = false
-
 function getBuyer(agencyBuyerId: string): BuyerProfile {
   if (agencyBuyerId === DEMO_NAV_IDS.buyerAmara) return DEMO_BUYERS.amara
   return DEMO_BUYERS.maya

@@ -9,8 +9,6 @@ import {
   type PropertyFitData,
 } from '@/lib/demo-data'
 
-export const instant = false
-
 function getFitData(propertyId: string): PropertyFitData {
   if (propertyId === DEMO_NAV_IDS.propAshgrove) return DEMO_ASHGROVE_FIT
   return DEMO_LARKFIELD_FIT

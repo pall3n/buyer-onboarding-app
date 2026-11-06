@@ -2,20 +2,22 @@ import Link from 'next/link'
 import { DemoBanner } from '@/components/shared/DemoBanner'
 import { ImportanceToggle } from '@/components/buyer/ImportanceToggle'
 import { DEMO_MAYA_BRIEF, DEMO_NAV_IDS } from '@/lib/demo-data'
+import { requireBuyerSession } from '@/lib/auth/buyer-session'
 
-export const instant = false
+export const dynamic = 'force-dynamic'
 
 export default async function ReviewPage(
   props: { params: Promise<{ opaqueId: string }> }
 ) {
   const { opaqueId } = await props.params
-  void opaqueId
+  const session = await requireBuyerSession(opaqueId)
+  const isDemo = session === null
 
   const brief = DEMO_MAYA_BRIEF
 
   return (
     <div className="min-h-screen bg-[var(--bi-background)]">
-      <DemoBanner />
+      {isDemo && <DemoBanner />}
 
       <main className="mx-auto max-w-lg px-4 py-8">
         {/* Back */}

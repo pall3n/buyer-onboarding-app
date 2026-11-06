@@ -94,8 +94,8 @@ M1 exit criterion: can navigate the full flow —
 |---|---|---|
 | **M0** | Scaffold, deps, theme tokens, route stubs, IMPLEMENTATION_PLAN.md | ✅ Done |
 | **M1** | All 7 screens with demo seed, in-memory navigation, no auth | ✅ Done |
-| **M2** | Supabase schema (migrations 1–8), RLS policies, seed script | ⬜ Next |
-| **M3** | Auth: invitation flow, buyer session, agent sign-in via Supabase Auth | ⬜ |
+| **M2** | Supabase schema (migrations 1–8), RLS policies, seed script, auth + invitation flow | ✅ Done |
+| **M3** | Auth: invitation flow, buyer session, agent sign-in via Supabase Auth | ✅ Done |
 | **M4** | Conversation engine: text modality, preference extraction, emerging brief | ⬜ |
 | **M5** | Voice modality: WebRTC/Realtime, server-issued ephemeral token, waveform UI | ⬜ |
 | **M6** | Property matching: hard rules + soft signals, fit breakdown | ⬜ |

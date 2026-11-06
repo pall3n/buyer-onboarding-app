@@ -1,31 +1,45 @@
 import { DemoBanner } from '@/components/shared/DemoBanner'
-import { ConversationThread } from '@/components/buyer/ConversationThread'
-import { HomeBriefSummary } from '@/components/buyer/HomeBriefSummary'
-import { VoiceDock } from '@/components/buyer/VoiceDock'
-import { ConversationPageLayout } from '@/components/buyer/ConversationPageLayout'
+import { ConversationPageClient } from '@/components/buyer/ConversationPageClient'
 import { DEMO_CONVERSATION, DEMO_MAYA_BRIEF } from '@/lib/demo-data'
+import { requireBuyerSession } from '@/lib/auth/buyer-session'
+import { loadConversationTurns, turnsToMessages } from '@/features/conversation/index'
+import { getOrCreateDraftProfile, loadBriefSummary } from '@/features/preferences/index'
 
-export const instant = false
+export const dynamic = 'force-dynamic'
 
 export default async function ConversationPage(
   props: { params: Promise<{ opaqueId: string }> }
 ) {
   const { opaqueId } = await props.params
-  void opaqueId // all demo conversations use the same fixture
+  const session = await requireBuyerSession(opaqueId)
+  const isDemo = session === null
+
+  const { initialMessages, initialBrief, initialTopicsDone } = isDemo
+    ? {
+        initialMessages: turnsToMessages(DEMO_CONVERSATION.turns),
+        initialBrief: DEMO_MAYA_BRIEF,
+        initialTopicsDone: DEMO_CONVERSATION.topicsDone,
+      }
+    : await (async () => {
+        const turns = await loadConversationTurns(session.sessionId)
+        const { versionId } = await getOrCreateDraftProfile(session.subjectId)
+        const { brief, topicsDone } = await loadBriefSummary(versionId)
+        return {
+          initialMessages: turnsToMessages(turns),
+          initialBrief: brief,
+          initialTopicsDone: topicsDone,
+        }
+      })()
 
   return (
     <>
-      <DemoBanner />
-      <ConversationPageLayout
-        thread={<ConversationThread turns={DEMO_CONVERSATION.turns} />}
-        brief={
-          <HomeBriefSummary
-            data={DEMO_MAYA_BRIEF}
-            topicsDone={DEMO_CONVERSATION.topicsDone}
-            topicsTotal={DEMO_CONVERSATION.topicsTotal}
-          />
-        }
-        voiceDock={<VoiceDock />}
+      {isDemo && <DemoBanner />}
+      <ConversationPageClient
+        opaqueId={opaqueId}
+        isDemo={isDemo}
+        initialMessages={initialMessages}
+        initialBrief={initialBrief}
+        initialTopicsDone={initialTopicsDone}
       />
     </>
   )
