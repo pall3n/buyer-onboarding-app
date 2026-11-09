@@ -3,6 +3,7 @@
 // All entities are fictional demo data; no real names or properties.
 
 import type { FeedbackSummary } from '@/features/feedback/index'
+import type { OutreachCandidate, PropertyShortlist } from '@/features/outreach/index'
 
 // ─── Fixed navigation IDs ──────────────────────────────────────────────────
 
@@ -11,6 +12,9 @@ export const DEMO_NAV_IDS = {
   buyerAmara: 'demo-buyer-amara',
   propLarkfield: 'demo-prop-larkfield',
   propAshgrove: 'demo-prop-ashgrove',
+  candidateLarkfieldMaya: 'demo-candidate-larkfield-maya',
+  candidateLarkfieldAmara: 'demo-candidate-larkfield-amara',
+  candidateLarkfieldJordan: 'demo-candidate-larkfield-jordan',
   briefLarkfield: 'demo-brief-larkfield',
   convMaya: 'demo-conv-maya',
   inviteMaya: 'demo-invite-maya',
@@ -755,4 +759,81 @@ export const DEMO_FEEDBACK_STATE: FeedbackSummary = {
     nextSteps: 'second_viewing',
     submittedAt: '2026-11-08T18:42:00.000Z',
   },
+}
+
+// ─── Demo outreach shortlist ───────────────────────────────────────────────
+
+const DEMO_DRAFT_MAYA = `Hi Maya and James,
+
+A property has just come to our attention that may suit your search — Larkfield House, TN15 7PQ, offered at £725,000.
+
+Based on what you've shared with us, private garden (south-facing) and period features may be of particular interest.
+
+If you'd like to find out more, please reply to this message or give us a call.
+
+Sophie Lane
+Hartfield & Rowe`
+
+const DEMO_DRAFT_AMARA = `Hi Amara and David,
+
+A property has just come to our attention that may suit your search — Larkfield House, TN15 7PQ, offered at £725,000.
+
+We think it may be worth your consideration based on the search profile you've shared with us.
+
+If you'd like to find out more, please reply to this message or give us a call.
+
+Sophie Lane
+Hartfield & Rowe`
+
+const DEMO_CANDIDATES: OutreachCandidate[] = [
+  {
+    id: DEMO_NAV_IDS.candidateLarkfieldMaya,
+    agencyBuyerId: DEMO_NAV_IDS.buyerMaya,
+    buyerName: 'Maya and James Reid',
+    status: 'approved',
+    eligibility: 'eligible',
+    hasHardConflicts: false,
+    conflictLabels: [],
+    matchReasons: ['Private garden (south-facing)', 'Period features', 'TN15 search area'],
+    draftMessage: DEMO_DRAFT_MAYA,
+    communicationPrefs: { emailOk: true, smsOk: false },
+    approvedAt: '2026-11-09T09:15:00.000Z',
+    approvedBy: 'sophie@hartfield-rowe.co.uk',
+  },
+  {
+    id: DEMO_NAV_IDS.candidateLarkfieldAmara,
+    agencyBuyerId: DEMO_NAV_IDS.buyerAmara,
+    buyerName: 'Amara and David Osei',
+    status: 'pending',
+    eligibility: 'eligible',
+    hasHardConflicts: false,
+    conflictLabels: [],
+    matchReasons: ['4+ bedrooms', 'Detached style'],
+    draftMessage: DEMO_DRAFT_AMARA,
+    communicationPrefs: { emailOk: false, smsOk: false },
+    approvedAt: null,
+    approvedBy: null,
+  },
+  {
+    id: DEMO_NAV_IDS.candidateLarkfieldJordan,
+    agencyBuyerId: 'demo-buyer-jordan',
+    buyerName: 'Jordan and Priya Nair',
+    status: 'dismissed',
+    eligibility: 'ineligible_conflicts',
+    hasHardConflicts: true,
+    conflictLabels: ['Needs parking for 2 cars', 'Price above stated maximum'],
+    matchReasons: [],
+    draftMessage: null,
+    communicationPrefs: { emailOk: true, smsOk: true },
+    approvedAt: null,
+    approvedBy: null,
+  },
+]
+
+export const DEMO_SHORTLIST: PropertyShortlist = {
+  propertyId: DEMO_NAV_IDS.propLarkfield,
+  propertyAddress: 'Larkfield House, TN15 7PQ',
+  propertyPrice: '£725,000',
+  candidates: DEMO_CANDIDATES,
+  builtAt: '2026-11-09T09:00:00.000Z',
 }

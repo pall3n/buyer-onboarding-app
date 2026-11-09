@@ -101,6 +101,8 @@ M1 exit criterion: can navigate the full flow —
 | **M6** | Property matching: hard rules + soft signals, fit breakdown | ✅ Done |
 | **M7** | Viewing brief generation and PDF/print export | ✅ Done |
 | **M8** | E2E test suite, security review, performance audit, soft launch | ✅ Done |
+| **Ext A** | Post-viewing feedback portal: invite token, buyer form, agent summary (Screen G) | ✅ Done |
+| **Ext B** | Buyer shortlist for new listings: eligibility, draft message, human review (Screen H) | ✅ Done |
 
 ---
 
