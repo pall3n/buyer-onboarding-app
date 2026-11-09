@@ -92,7 +92,7 @@ export default async function ViewingBriefPage(
   } else {
     const agent = await requireAgentAuth()
     agencyId = agent.agencyId
-    const result = await loadViewingBrief(briefId)
+    const result = await loadViewingBrief(briefId, agencyId)
     if (!result) notFound()
     draft = result.draft
     notes = result.notes

@@ -221,13 +221,15 @@ export async function createBrief(
 }
 
 export async function loadViewingBrief(
-  briefId: string
+  briefId: string,
+  agencyId: string
 ): Promise<{ draft: ViewingBriefDraftJson; notes: string | null } | null> {
   const admin = getAdminClient()
   const { data } = await admin
     .from('viewing_briefs')
     .select('draft_json, notes_private')
     .eq('id', briefId)
+    .eq('agency_id', agencyId)
     .single()
 
   if (!data) return null
@@ -239,16 +241,18 @@ export async function loadViewingBrief(
 
 export async function loadBriefIdForBuyerAndProperty(
   agencyBuyerId: string,
-  propertyId: string
+  propertyId: string,
+  agencyId: string
 ): Promise<string | null> {
   const admin = getAdminClient()
 
-  // Find the most recent analysis for this buyer+property
+  // Find the most recent analysis for this buyer+property (scoped to agency)
   const { data: analysis } = await admin
     .from('property_analyses')
     .select('id')
     .eq('agency_buyer_id', agencyBuyerId)
     .eq('property_id', propertyId)
+    .eq('agency_id', agencyId)
     .order('created_at', { ascending: false })
     .limit(1)
     .single()

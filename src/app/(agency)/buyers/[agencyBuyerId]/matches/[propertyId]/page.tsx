@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { TrustBadge } from '@/components/shared/TrustBadge'
 import { requireAgentAuth } from '@/lib/auth/index'
-import { loadAnalysis } from '@/features/matching/index'
+import { loadAnalysis, runAndPersistAnalysis } from '@/features/matching/index'
 import { createBrief, loadBriefIdForBuyerAndProperty } from '@/features/viewing-briefs/index'
 import { getAdminClient } from '@/lib/supabase/admin'
 import {
@@ -69,11 +69,8 @@ function FitSection({ icon, heading, items, emptyMessage }: FitSectionProps) {
 
 async function runAnalysisAction(agencyBuyerId: string, propertyId: string) {
   'use server'
-  await fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/api/analysis`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ agencyBuyerId, propertyId }),
-  })
+  const agent = await requireAgentAuth()
+  await runAndPersistAnalysis(agencyBuyerId, propertyId, agent.agencyId)
   revalidatePath(`/buyers/${agencyBuyerId}/matches/${propertyId}`)
 }
 
@@ -84,12 +81,13 @@ async function createBriefAction(agencyBuyerId: string, propertyId: string) {
   redirect(`/viewing-briefs/${briefId}`)
 }
 
-async function getBuyerName(agencyBuyerId: string): Promise<string> {
+async function getBuyerName(agencyBuyerId: string, agencyId: string): Promise<string> {
   const admin = getAdminClient()
   const { data } = await admin
     .from('agency_buyers')
     .select('buyer_subjects(name)')
     .eq('id', agencyBuyerId)
+    .eq('agency_id', agencyId)
     .single()
   const subjects = data?.buyer_subjects as Array<{ name: string }> | { name: string } | null
   if (Array.isArray(subjects)) return subjects[0]?.name ?? 'Buyer'
@@ -110,11 +108,11 @@ export default async function PropertyFitPage(
   if (isDemo) {
     fit = getDemoFit(propertyId)
   } else {
-    await requireAgentAuth()
-    fit = await loadAnalysis(agencyBuyerId, propertyId)
-    buyerName = await getBuyerName(agencyBuyerId)
+    const agent = await requireAgentAuth()
+    fit = await loadAnalysis(agencyBuyerId, propertyId, agent.agencyId)
+    buyerName = await getBuyerName(agencyBuyerId, agent.agencyId)
     if (fit !== null) {
-      existingBriefId = await loadBriefIdForBuyerAndProperty(agencyBuyerId, propertyId)
+      existingBriefId = await loadBriefIdForBuyerAndProperty(agencyBuyerId, propertyId, agent.agencyId)
     }
   }
 

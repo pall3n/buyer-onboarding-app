@@ -1,7 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.SUPABASE_URL!
-const serviceRoleKey = process.env.SERVICE_ROLE_KEY!
+import { getEnv } from '@/lib/env'
 
 let _adminClient: SupabaseClient | null = null
 
@@ -12,7 +10,8 @@ let _adminClient: SupabaseClient | null = null
  */
 export function getAdminClient(): SupabaseClient {
   if (!_adminClient) {
-    _adminClient = createClient(supabaseUrl, serviceRoleKey, {
+    const { SUPABASE_URL, SERVICE_ROLE_KEY } = getEnv()
+    _adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,

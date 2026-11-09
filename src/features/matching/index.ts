@@ -1,6 +1,7 @@
 import { getAdminClient } from '@/lib/supabase/admin'
 import type { FitItem, PropertyFitData, TrustStatus } from '@/lib/demo-data'
 import type { PropertyFact, PropertyRecord } from '@/features/properties/index'
+import { loadPropertyWithFacts } from '@/features/properties/index'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -311,21 +312,108 @@ export function deriveVerdict(
 
 export async function loadAnalysis(
   agencyBuyerId: string,
-  propertyId: string
+  propertyId: string,
+  agencyId?: string
 ): Promise<PropertyFitData | null> {
   const admin = getAdminClient()
 
-  const { data } = await admin
+  let query = admin
     .from('property_analyses')
     .select('result_json')
     .eq('agency_buyer_id', agencyBuyerId)
     .eq('property_id', propertyId)
+
+  if (agencyId) {
+    query = query.eq('agency_id', agencyId)
+  }
+
+  const { data } = await query
     .order('created_at', { ascending: false })
     .limit(1)
     .single()
 
   if (!data) return null
   return data.result_json as PropertyFitData
+}
+
+export async function runAndPersistAnalysis(
+  agencyBuyerId: string,
+  propertyId: string,
+  agencyId: string
+): Promise<void> {
+  const admin = getAdminClient()
+
+  // 1. Find home_profile → draft profile_version via subject_id
+  const { data: agencyBuyer } = await admin
+    .from('agency_buyers')
+    .select('id, subject_id')
+    .eq('id', agencyBuyerId)
+    .eq('agency_id', agencyId)
+    .single()
+
+  if (!agencyBuyer) throw new Error('Agency buyer not found or not authorized')
+
+  const { data: profile } = await admin
+    .from('home_profiles')
+    .select('id')
+    .eq('subject_id', agencyBuyer.subject_id)
+    .single()
+
+  if (!profile) throw new Error('No home profile found for buyer')
+
+  const { data: version } = await admin
+    .from('home_profile_versions')
+    .select('id')
+    .eq('profile_id', profile.id)
+    .eq('status', 'draft')
+    .order('version_number', { ascending: false })
+    .limit(1)
+    .single()
+
+  if (!version) throw new Error('No draft profile version found')
+
+  // 2. Load preferences
+  const { data: prefRows } = await admin
+    .from('profile_preferences')
+    .select('category, key, typed_value, priority')
+    .eq('version_id', version.id)
+    .neq('category', 'meta')
+
+  const preferences = (prefRows ?? []).map(row => ({
+    category: row.category as string,
+    key: row.key as string,
+    typedValue: (row.typed_value as { value?: unknown })?.value ?? null,
+    priority: row.priority as string,
+  }))
+
+  // 3. Load property + facts
+  const propertyData = await loadPropertyWithFacts(propertyId)
+  if (!propertyData) throw new Error('Property not found')
+
+  // 4. Run matching
+  const fitData = runMatching(preferences, propertyData.facts, propertyData.property)
+  const verdict = deriveVerdict(fitData.conflicts.length, fitData.strongMatches.length, fitData.unknowns.length)
+
+  // 5. Replace existing analysis, insert fresh
+  await admin
+    .from('property_analyses')
+    .delete()
+    .eq('agency_buyer_id', agencyBuyerId)
+    .eq('property_id', propertyId)
+
+  const { error } = await admin
+    .from('property_analyses')
+    .insert({
+      agency_id: agencyId,
+      property_id: propertyId,
+      agency_buyer_id: agencyBuyerId,
+      profile_version_id: version.id,
+      property_revision: propertyData.property.revision,
+      verdict,
+      result_json: fitData,
+    })
+
+  if (error) throw new Error(`Analysis failed to save: ${error.message}`)
 }
 
 // ─── Utilities ────────────────────────────────────────────────────────────────

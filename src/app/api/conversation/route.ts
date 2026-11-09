@@ -8,9 +8,10 @@ import type { UIMessage, TextUIPart } from 'ai'
 import { HARTFIELD_SYSTEM_PROMPT, getConversationModel } from '@/lib/ai/index'
 import { requireBuyerSessionForRoute, isDemoId } from '@/lib/auth/buyer-session'
 import { appendTurn } from '@/features/conversation/index'
+import { getAdminClient } from '@/lib/supabase/admin'
 import { getOrCreateDraftProfile, loadBriefSummary } from '@/features/preferences/index'
 import { extractAndPersist } from '@/lib/ai/extraction'
-import { logAuditEvent } from '@/lib/observability/index'
+import { logAuditEvent } from '@/lib/db'
 import { DEMO_MAYA_BRIEF, DEMO_CONVERSATION } from '@/lib/demo-data'
 
 export const maxDuration = 60
@@ -27,6 +28,19 @@ export async function POST(request: Request) {
   const session = await requireBuyerSessionForRoute(opaqueId)
   const isDemo = session === null && isDemoId(opaqueId)
   if (!isDemo && !session) return new Response('Unauthorized', { status: 401 })
+
+  // Rate limit: max 20 turns per session per minute
+  if (session) {
+    const admin = getAdminClient()
+    const { count } = await admin
+      .from('conversation_turns')
+      .select('id', { count: 'exact', head: true })
+      .eq('session_id', session.sessionId)
+      .gte('created_at', new Date(Date.now() - 60_000).toISOString())
+    if ((count ?? 0) >= 20) {
+      return new Response('Rate limit exceeded — please wait a moment before continuing.', { status: 429 })
+    }
+  }
 
   // Extract user message text from last UIMessage
   const lastMsg = messages[messages.length - 1]

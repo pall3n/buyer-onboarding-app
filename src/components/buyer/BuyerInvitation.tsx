@@ -93,7 +93,7 @@ export function BuyerInvitation(props: BuyerInvitationProps) {
           {/* Privacy note */}
           <p className="text-center text-[11px] leading-relaxed text-[var(--bi-muted)]">
             Your answers help Hartfield &amp; Rowe understand what you&apos;re looking for.
-            We don&apos;t store recordings.
+            Voice audio is not stored. Conversation transcripts are saved to build your profile.
           </p>
         </div>
       </main>

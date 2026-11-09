@@ -3,7 +3,7 @@ import { requireBuyerSessionForRoute } from '@/lib/auth/buyer-session'
 import { appendTurnPair, loadConversationHistory } from '@/features/conversation/index'
 import { getOrCreateDraftProfile } from '@/features/preferences/index'
 import { extractAndPersist } from '@/lib/ai/extraction'
-import { logAuditEvent } from '@/lib/observability/index'
+import { logAuditEvent } from '@/lib/db'
 
 const PersistRequestSchema = z.object({
   opaqueId: z.string().min(1).max(200),
