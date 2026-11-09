@@ -1,6 +1,6 @@
 import { getAdminClient } from '@/lib/supabase/admin'
 import type { ConversationTurn } from '@/lib/demo-data'
-import type { UIMessage, TextUIPart } from 'ai'
+import type { UIMessage, TextUIPart, ModelMessage } from 'ai'
 
 // ─── DB helpers ───────────────────────────────────────────────────────────────
 
@@ -31,6 +31,19 @@ export async function appendTurn(
   })
 }
 
+export async function appendTurnPair(
+  sessionId: string,
+  userContent: string,
+  assistantContent: string
+): Promise<void> {
+  const admin = getAdminClient()
+  const baseIndex = await getNextTurnIndex(sessionId)
+  await admin.from('conversation_turns').insert([
+    { session_id: sessionId, role: 'user', content: userContent, turn_index: baseIndex },
+    { session_id: sessionId, role: 'assistant', content: assistantContent, turn_index: baseIndex + 1 },
+  ])
+}
+
 export async function loadConversationTurns(
   sessionId: string
 ): Promise<ConversationTurn[]> {
@@ -50,6 +63,24 @@ export async function loadConversationTurns(
       hour: '2-digit',
       minute: '2-digit',
     }),
+  }))
+}
+
+export async function loadConversationHistory(
+  sessionId: string
+): Promise<ModelMessage[]> {
+  const admin = getAdminClient()
+  const { data } = await admin
+    .from('conversation_turns')
+    .select('role, content')
+    .eq('session_id', sessionId)
+    .order('turn_index', { ascending: true })
+
+  if (!data) return []
+
+  return data.map(row => ({
+    role: (row.role === 'assistant' ? 'assistant' : 'user') as 'assistant' | 'user',
+    content: row.content as string,
   }))
 }
 

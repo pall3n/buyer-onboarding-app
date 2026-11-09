@@ -96,9 +96,9 @@ M1 exit criterion: can navigate the full flow —
 | **M1** | All 7 screens with demo seed, in-memory navigation, no auth | ✅ Done |
 | **M2** | Supabase schema (migrations 1–8), RLS policies, seed script, auth + invitation flow | ✅ Done |
 | **M3** | Auth: invitation flow, buyer session, agent sign-in via Supabase Auth | ✅ Done |
-| **M4** | Conversation engine: text modality, preference extraction, emerging brief | ⬜ |
-| **M5** | Voice modality: WebRTC/Realtime, server-issued ephemeral token, waveform UI | ⬜ |
-| **M6** | Property matching: hard rules + soft signals, fit breakdown | ⬜ |
+| **M4** | Conversation engine: text modality, preference extraction, emerging brief | ✅ Done |
+| **M5** | Voice modality: WebRTC/Realtime, server-issued ephemeral token, waveform UI | ✅ Done |
+| **M6** | Property matching: hard rules + soft signals, fit breakdown | ✅ Done |
 | **M7** | Viewing brief generation and PDF/print export | ⬜ |
 | **M8** | E2E test suite, security review, performance audit, soft launch | ⬜ |
 

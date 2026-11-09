@@ -10,10 +10,27 @@ interface VoiceDockProps {
   className?: string
   onSubmit?: (text: string) => void
   isDisabled?: boolean
+  // M5 voice hook integration
+  voiceState?: VoiceState
+  voiceLevels?: number[]
+  onVoiceStart?: () => void
+  onVoiceStop?: () => void
+  onVoiceInterrupt?: () => void
+  isDemo?: boolean
 }
 
-export function VoiceDock({ className, onSubmit, isDisabled }: VoiceDockProps) {
-  const [state, setState] = useState<VoiceState>('idle')
+export function VoiceDock({
+  className,
+  onSubmit,
+  isDisabled,
+  voiceState: voiceStateProp,
+  voiceLevels,
+  onVoiceStart,
+  onVoiceStop,
+  onVoiceInterrupt,
+  isDemo,
+}: VoiceDockProps) {
+  const [internalState, setInternalState] = useState<VoiceState>('idle')
   const [reducedMotion, setReducedMotion] = useState<boolean>(
     () =>
       typeof window !== 'undefined' &&
@@ -26,6 +43,33 @@ export function VoiceDock({ className, onSubmit, isDisabled }: VoiceDockProps) {
     mq.addEventListener('change', handler)
     return () => mq.removeEventListener('change', handler)
   }, [])
+
+  // External voiceState prop takes priority when provided
+  const state = voiceStateProp ?? internalState
+
+  function handleMicClick() {
+    if (onVoiceStart) {
+      onVoiceStart()
+    } else {
+      setInternalState('listening')
+    }
+  }
+
+  function handleCancel() {
+    if (onVoiceStop) {
+      onVoiceStop()
+    } else {
+      setInternalState('idle')
+    }
+  }
+
+  function handleInterrupt() {
+    if (onVoiceInterrupt) {
+      onVoiceInterrupt()
+    } else {
+      setInternalState('idle')
+    }
+  }
 
   return (
     <LazyMotion features={domAnimation}>
@@ -52,25 +96,28 @@ export function VoiceDock({ className, onSubmit, isDisabled }: VoiceDockProps) {
         >
           {state === 'idle' && (
             <IdleContent
-              onMicClick={() => setState('listening')}
+              onMicClick={handleMicClick}
               onSubmit={onSubmit}
               isDisabled={isDisabled}
+              isDemo={isDemo}
             />
           )}
           {state === 'listening' && (
             <ListeningContent
-              onCancel={() => setState('idle')}
+              onCancel={handleCancel}
               reducedMotion={reducedMotion}
+              levels={voiceLevels}
             />
           )}
           {state === 'thinking' && <ThinkingContent />}
           {state === 'speaking' && (
             <SpeakingContent
-              onInterrupt={() => setState('idle')}
+              onInterrupt={handleInterrupt}
               reducedMotion={reducedMotion}
+              levels={voiceLevels}
             />
           )}
-          {state === 'error' && <ErrorContent onRetry={() => setState('idle')} />}
+          {state === 'error' && <ErrorContent onRetry={handleMicClick} />}
         </m.div>
       </div>
     </LazyMotion>
@@ -83,10 +130,12 @@ function IdleContent({
   onMicClick,
   onSubmit,
   isDisabled,
+  isDemo,
 }: {
   onMicClick: () => void
   onSubmit?: (text: string) => void
   isDisabled?: boolean
+  isDemo?: boolean
 }) {
   const [value, setValue] = useState('')
 
@@ -125,8 +174,8 @@ function IdleContent({
       {!value.trim() && (
         <button
           onClick={onMicClick}
-          disabled={isDisabled}
-          aria-label="Start voice input"
+          disabled={isDisabled || isDemo}
+          aria-label={isDemo ? 'Voice unavailable in demo' : 'Start voice input'}
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--bi-sage)] text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--bi-sage)] disabled:opacity-50"
         >
           <MicIcon />
@@ -141,9 +190,11 @@ function IdleContent({
 function ListeningContent({
   onCancel,
   reducedMotion,
+  levels,
 }: {
   onCancel: () => void
   reducedMotion: boolean
+  levels?: number[]
 }) {
   return (
     <button
@@ -151,7 +202,7 @@ function ListeningContent({
       aria-label="Cancel voice input"
       className="flex items-center gap-4 px-6 py-3 text-white focus-visible:outline-none"
     >
-      <Waveform active reducedMotion={reducedMotion} />
+      <Waveform active reducedMotion={reducedMotion} levels={levels} />
       <span className="text-sm font-medium">Tap to pause</span>
     </button>
   )
@@ -173,9 +224,11 @@ function ThinkingContent() {
 function SpeakingContent({
   onInterrupt,
   reducedMotion,
+  levels,
 }: {
   onInterrupt: () => void
   reducedMotion: boolean
+  levels?: number[]
 }) {
   return (
     <button
@@ -183,7 +236,7 @@ function SpeakingContent({
       aria-label="Interrupt response"
       className="flex items-center gap-4 px-6 py-3 text-white focus-visible:outline-none"
     >
-      <Waveform active={false} reducedMotion={reducedMotion} />
+      <Waveform active={false} reducedMotion={reducedMotion} levels={levels} />
       <span className="text-sm font-medium">Tap to interrupt</span>
     </button>
   )
@@ -210,31 +263,41 @@ function ErrorContent({ onRetry }: { onRetry: () => void }) {
 function Waveform({
   active,
   reducedMotion,
+  levels,
 }: {
   active: boolean
   reducedMotion: boolean
+  levels?: number[]
 }) {
   const bars = [1, 2, 3, 4, 5]
-  const heights = active ? ['h-2', 'h-4', 'h-5', 'h-3', 'h-2'] : ['h-2', 'h-2', 'h-2', 'h-2', 'h-2']
+  const defaultHeights = active ? ['h-2', 'h-4', 'h-5', 'h-3', 'h-2'] : ['h-2', 'h-2', 'h-2', 'h-2', 'h-2']
   const delays = ['0ms', '80ms', '160ms', '80ms', '0ms']
 
   return (
     <div aria-hidden="true" className="flex items-center gap-[3px]">
-      {bars.map((_, i) => (
-        <span
-          key={i}
-          className={cn(
-            'w-[3px] rounded-full bg-white transition-all',
-            heights[i],
-            active && !reducedMotion && 'animate-voice-bar'
-          )}
-          style={
-            active && !reducedMotion
-              ? { animationDelay: delays[i] }
-              : undefined
-          }
-        />
-      ))}
+      {bars.map((_, i) => {
+        const liveLevel = levels?.[i]
+        const hasLiveLevel = liveLevel !== undefined && liveLevel > 0
+
+        return (
+          <span
+            key={i}
+            className={cn(
+              'w-[3px] rounded-full bg-white transition-all',
+              !hasLiveLevel && defaultHeights[i],
+              active && !reducedMotion && !hasLiveLevel && 'animate-voice-bar'
+            )}
+            style={{
+              ...(active && !reducedMotion && !hasLiveLevel
+                ? { animationDelay: delays[i] }
+                : undefined),
+              ...(hasLiveLevel
+                ? { height: `${Math.max(4, Math.round(liveLevel * 20))}px` }
+                : undefined),
+            }}
+          />
+        )
+      })}
     </div>
   )
 }

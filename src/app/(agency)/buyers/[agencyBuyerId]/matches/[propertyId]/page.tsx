@@ -1,5 +1,11 @@
+'use server'
+
 import Link from 'next/link'
+import { revalidatePath } from 'next/cache'
 import { TrustBadge } from '@/components/shared/TrustBadge'
+import { requireAgentAuth } from '@/lib/auth/index'
+import { loadAnalysis } from '@/features/matching/index'
+import { getAdminClient } from '@/lib/supabase/admin'
 import {
   DEMO_LARKFIELD_FIT,
   DEMO_ASHGROVE_FIT,
@@ -9,7 +15,11 @@ import {
   type PropertyFitData,
 } from '@/lib/demo-data'
 
-function getFitData(propertyId: string): PropertyFitData {
+function isDemoId(id: string): boolean {
+  return id.startsWith('demo-')
+}
+
+function getDemoFit(propertyId: string): PropertyFitData {
   if (propertyId === DEMO_NAV_IDS.propAshgrove) return DEMO_ASHGROVE_FIT
   return DEMO_LARKFIELD_FIT
 }
@@ -55,11 +65,45 @@ function FitSection({ icon, heading, items, emptyMessage }: FitSectionProps) {
   )
 }
 
+async function runAnalysisAction(agencyBuyerId: string, propertyId: string) {
+  'use server'
+  await fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/api/analysis`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ agencyBuyerId, propertyId }),
+  })
+  revalidatePath(`/buyers/${agencyBuyerId}/matches/${propertyId}`)
+}
+
+async function getBuyerName(agencyBuyerId: string): Promise<string> {
+  const admin = getAdminClient()
+  const { data } = await admin
+    .from('agency_buyers')
+    .select('buyer_subjects(name)')
+    .eq('id', agencyBuyerId)
+    .single()
+  const subjects = data?.buyer_subjects as Array<{ name: string }> | { name: string } | null
+  if (Array.isArray(subjects)) return subjects[0]?.name ?? 'Buyer'
+  return (subjects as { name?: string } | null)?.name ?? 'Buyer'
+}
+
 export default async function PropertyFitPage(
   props: { params: Promise<{ agencyBuyerId: string; propertyId: string }> }
 ) {
   const { agencyBuyerId, propertyId } = await props.params
-  const fit = getFitData(propertyId)
+
+  const isDemo = isDemoId(agencyBuyerId) || isDemoId(propertyId)
+
+  let fit: PropertyFitData | null = null
+  let buyerName = 'Maya and James Reid'
+
+  if (isDemo) {
+    fit = getDemoFit(propertyId)
+  } else {
+    await requireAgentAuth()
+    fit = await loadAnalysis(agencyBuyerId, propertyId)
+    buyerName = await getBuyerName(agencyBuyerId)
+  }
 
   const isLarkfield = propertyId === DEMO_PROPERTIES.larkfield.id
   const isAshgrove = propertyId === DEMO_PROPERTIES.ashgrove.id
@@ -77,7 +121,7 @@ export default async function PropertyFitPage(
             href={`/buyers/${agencyBuyerId}`}
             className="hover:text-[var(--bi-ink)] underline-offset-2 hover:underline"
           >
-            Maya and James Reid
+            {buyerName}
           </Link>
           <span aria-hidden="true">/</span>
           <span className="text-[var(--bi-ink)]">Property fit</span>
@@ -85,26 +129,30 @@ export default async function PropertyFitPage(
 
         {/* Property selector tabs */}
         <div className="mt-4 flex items-center gap-2 border-b border-[var(--bi-line)] pb-0">
-          <Link
-            href={`/buyers/${agencyBuyerId}/matches/${DEMO_PROPERTIES.larkfield.id}`}
-            className={`border-b-2 px-3 pb-2.5 text-sm font-medium transition-colors ${
-              isLarkfield
-                ? 'border-[var(--bi-ink)] text-[var(--bi-ink)]'
-                : 'border-transparent text-[var(--bi-muted)] hover:text-[var(--bi-ink)]'
-            }`}
-          >
-            Larkfield House
-          </Link>
-          <Link
-            href={`/buyers/${agencyBuyerId}/matches/${DEMO_PROPERTIES.ashgrove.id}`}
-            className={`border-b-2 px-3 pb-2.5 text-sm font-medium transition-colors ${
-              isAshgrove
-                ? 'border-[var(--bi-ink)] text-[var(--bi-ink)]'
-                : 'border-transparent text-[var(--bi-muted)] hover:text-[var(--bi-ink)]'
-            }`}
-          >
-            4 Ashgrove Place
-          </Link>
+          {isDemo && (
+            <>
+              <Link
+                href={`/buyers/${agencyBuyerId}/matches/${DEMO_PROPERTIES.larkfield.id}`}
+                className={`border-b-2 px-3 pb-2.5 text-sm font-medium transition-colors ${
+                  isLarkfield
+                    ? 'border-[var(--bi-ink)] text-[var(--bi-ink)]'
+                    : 'border-transparent text-[var(--bi-muted)] hover:text-[var(--bi-ink)]'
+                }`}
+              >
+                Larkfield House
+              </Link>
+              <Link
+                href={`/buyers/${agencyBuyerId}/matches/${DEMO_PROPERTIES.ashgrove.id}`}
+                className={`border-b-2 px-3 pb-2.5 text-sm font-medium transition-colors ${
+                  isAshgrove
+                    ? 'border-[var(--bi-ink)] text-[var(--bi-ink)]'
+                    : 'border-transparent text-[var(--bi-muted)] hover:text-[var(--bi-ink)]'
+                }`}
+              >
+                4 Ashgrove Place
+              </Link>
+            </>
+          )}
           <button
             disabled
             title="Add property not available in demo"
@@ -115,73 +163,104 @@ export default async function PropertyFitPage(
           </button>
         </div>
 
-        {/* Caption */}
-        <p className="mt-3 text-xs text-[var(--bi-muted)]">
-          Compared against Maya and James&apos;s approved brief · 29 Oct ·{' '}
-          <span className="font-medium">{fit.propertyPrice}</span>
-        </p>
+        {/* No analysis yet — show run button */}
+        {!isDemo && fit === null && (
+          <div className="mt-10 flex flex-col items-start gap-4">
+            <p className="text-sm text-[var(--bi-muted)]">
+              No analysis has been run for this buyer and property yet.
+            </p>
+            <form action={runAnalysisAction.bind(null, agencyBuyerId, propertyId)}>
+              <button
+                type="submit"
+                className="inline-flex items-center rounded-xl bg-[var(--bi-sage)] px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--bi-sage)]"
+              >
+                Run analysis
+              </button>
+            </form>
+          </div>
+        )}
 
         {/* Fit sections */}
-        <div className="mt-6 space-y-8">
-          <FitSection
-            icon="✓"
-            heading="Strong matches"
-            items={fit.strongMatches}
-          />
-          <FitSection
-            icon="~"
-            heading="Potential compromises"
-            items={fit.compromises}
-          />
-          <FitSection
-            icon="✕"
-            heading="Conflicts with non-negotiables"
-            items={fit.conflicts}
-            emptyMessage="No conflicts with non-negotiables identified."
-          />
-          <FitSection
-            icon="?"
-            heading="Unknown — check before viewing"
-            items={fit.unknowns}
-          />
+        {fit !== null && (
+          <>
+            <p className="mt-3 text-xs text-[var(--bi-muted)]">
+              {isDemo
+                ? `Compared against ${buyerName}'s approved brief · 29 Oct · `
+                : 'Compared against latest brief · '}
+              <span className="font-medium">{fit.propertyPrice}</span>
+            </p>
 
-          {/* Worth asking */}
-          {fit.worthAsking.length > 0 && (
-            <div>
-              <h3 className="text-sm font-semibold text-[var(--bi-ink)]">Worth asking the Reids</h3>
-              <ul className="mt-2 space-y-2">
-                {fit.worthAsking.map((q) => (
-                  <li
-                    key={q}
-                    className="rounded-lg border border-[var(--bi-line)] bg-[var(--bi-apricot)] px-3 py-2 text-sm text-[var(--bi-ink)]"
-                  >
-                    {q}
-                  </li>
-                ))}
-              </ul>
+            <div className="mt-6 space-y-8">
+              <FitSection
+                icon="✓"
+                heading="Strong matches"
+                items={fit.strongMatches}
+              />
+              <FitSection
+                icon="~"
+                heading="Potential compromises"
+                items={fit.compromises}
+              />
+              <FitSection
+                icon="✕"
+                heading="Conflicts with non-negotiables"
+                items={fit.conflicts}
+                emptyMessage="No conflicts with non-negotiables identified."
+              />
+              <FitSection
+                icon="?"
+                heading="Unknown — check before viewing"
+                items={fit.unknowns}
+              />
+
+              {fit.worthAsking.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-[var(--bi-ink)]">Worth asking the {buyerName}</h3>
+                  <ul className="mt-2 space-y-2">
+                    {fit.worthAsking.map((q) => (
+                      <li
+                        key={q}
+                        className="rounded-lg border border-[var(--bi-line)] bg-[var(--bi-apricot)] px-3 py-2 text-sm text-[var(--bi-ink)]"
+                      >
+                        {q}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Actions */}
-        <div className="mt-8 flex flex-wrap gap-3">
-          {isLarkfield && (
-            <Link
-              href={`/viewing-briefs/${DEMO_NAV_IDS.briefLarkfield}`}
-              className="inline-flex items-center rounded-xl bg-[var(--bi-ink)] px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--bi-sage)]"
-            >
-              Create viewing brief →
-            </Link>
-          )}
-          <button
-            disabled
-            title="Available after M2"
-            aria-disabled="true"
-            className="rounded-xl border border-[var(--bi-line)] px-4 py-2.5 text-sm text-[var(--bi-muted)] cursor-not-allowed opacity-50"
-          >
-            Send questions to Maya
-          </button>
-        </div>
+            {/* Actions */}
+            <div className="mt-8 flex flex-wrap gap-3">
+              {isLarkfield && (
+                <Link
+                  href={`/viewing-briefs/${DEMO_NAV_IDS.briefLarkfield}`}
+                  className="inline-flex items-center rounded-xl bg-[var(--bi-ink)] px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--bi-sage)]"
+                >
+                  Create viewing brief →
+                </Link>
+              )}
+              {!isDemo && (
+                <form action={runAnalysisAction.bind(null, agencyBuyerId, propertyId)}>
+                  <button
+                    type="submit"
+                    className="rounded-xl border border-[var(--bi-line)] px-4 py-2.5 text-sm text-[var(--bi-muted)] hover:text-[var(--bi-ink)] hover:border-[var(--bi-ink)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--bi-sage)]"
+                  >
+                    Re-run analysis
+                  </button>
+                </form>
+              )}
+              <button
+                disabled
+                title="Available after M2"
+                aria-disabled="true"
+                className="rounded-xl border border-[var(--bi-line)] px-4 py-2.5 text-sm text-[var(--bi-muted)] cursor-not-allowed opacity-50"
+              >
+                Send questions to Maya
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

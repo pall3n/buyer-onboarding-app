@@ -3,14 +3,13 @@ import {
   toUIMessageStream,
   createUIMessageStreamResponse,
   convertToModelMessages,
-  generateObject,
-  zodSchema,
 } from 'ai'
-import type { UIMessage, TextUIPart, ModelMessage } from 'ai'
-import { HARTFIELD_SYSTEM_PROMPT, EXTRACTION_SYSTEM_PROMPT, getConversationModel, getExtractionModel } from '@/lib/ai/index'
+import type { UIMessage, TextUIPart } from 'ai'
+import { HARTFIELD_SYSTEM_PROMPT, getConversationModel } from '@/lib/ai/index'
 import { requireBuyerSessionForRoute, isDemoId } from '@/lib/auth/buyer-session'
 import { appendTurn } from '@/features/conversation/index'
-import { getOrCreateDraftProfile, upsertPreferences, loadBriefSummary, ExtractedPreferencesSchema } from '@/features/preferences/index'
+import { getOrCreateDraftProfile, loadBriefSummary } from '@/features/preferences/index'
+import { extractAndPersist } from '@/lib/ai/extraction'
 import { logAuditEvent } from '@/lib/observability/index'
 import { DEMO_MAYA_BRIEF, DEMO_CONVERSATION } from '@/lib/demo-data'
 
@@ -114,24 +113,3 @@ export async function GET(request: Request) {
   return Response.json({ brief, topicsDone })
 }
 
-// ─── Extraction helper ────────────────────────────────────────────────────────
-
-async function extractAndPersist(
-  modelMessages: ModelMessage[],
-  assistantText: string,
-  versionId: string
-): Promise<void> {
-  const extractionMessages: ModelMessage[] = [
-    ...modelMessages,
-    { role: 'assistant' as const, content: assistantText },
-  ]
-
-  const { object } = await generateObject({
-    model: getExtractionModel(),
-    system: EXTRACTION_SYSTEM_PROMPT,
-    messages: extractionMessages,
-    schema: zodSchema(ExtractedPreferencesSchema),
-  })
-
-  await upsertPreferences(versionId, object)
-}

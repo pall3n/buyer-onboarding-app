@@ -16,7 +16,7 @@ describe('VoiceDock', () => {
     expect(screen.getByRole('button', { name: 'Start voice input' })).toBeInTheDocument()
   })
 
-  it('transitions to listening when mic button is clicked', () => {
+  it('transitions to listening when mic button is clicked (internal state)', () => {
     const { container } = render(<VoiceDock />)
     const micButton = screen.getByRole('button', { name: 'Start voice input' })
     fireEvent.click(micButton)
@@ -96,5 +96,50 @@ describe('VoiceDock', () => {
     fireEvent.change(input, { target: { value: 'Try to send' } })
     fireEvent.keyDown(input, { key: 'Enter' })
     expect(onSubmit).not.toHaveBeenCalled()
+  })
+
+  // ─── M5 additions ──────────────────────────────────────────────────────
+
+  it('isDemo prop disables mic button with appropriate aria-label', () => {
+    render(<VoiceDock isDemo />)
+    const micButton = screen.getByRole('button', { name: 'Voice unavailable in demo' })
+    expect(micButton).toBeDisabled()
+  })
+
+  it('calls onVoiceStart when mic button is clicked', () => {
+    const onVoiceStart = vi.fn()
+    render(<VoiceDock onVoiceStart={onVoiceStart} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Start voice input' }))
+    expect(onVoiceStart).toHaveBeenCalledOnce()
+  })
+
+  it('calls onVoiceInterrupt when interrupt button is clicked in speaking state', () => {
+    const onVoiceInterrupt = vi.fn()
+    render(<VoiceDock voiceState="speaking" onVoiceInterrupt={onVoiceInterrupt} />)
+    const interruptButton = screen.getByRole('button', { name: 'Interrupt response' })
+    fireEvent.click(interruptButton)
+    expect(onVoiceInterrupt).toHaveBeenCalledOnce()
+  })
+
+  it('calls onVoiceStop when cancel is clicked in listening state', () => {
+    const onVoiceStop = vi.fn()
+    render(<VoiceDock voiceState="listening" onVoiceStop={onVoiceStop} />)
+    const cancelButton = screen.getByRole('button', { name: 'Cancel voice input' })
+    fireEvent.click(cancelButton)
+    expect(onVoiceStop).toHaveBeenCalledOnce()
+  })
+
+  it('uses voiceState prop to override internal state', () => {
+    const { container } = render(<VoiceDock voiceState="thinking" />)
+    const dock = container.querySelector('[data-voice-state]')
+    expect(dock?.getAttribute('data-voice-state')).toBe('thinking')
+    expect(screen.getByText('Taking that in…')).toBeInTheDocument()
+  })
+
+  it('renders with voiceLevels prop without errors', () => {
+    const levels = [0.1, 0.5, 0.8, 0.4, 0.2]
+    render(<VoiceDock voiceState="listening" voiceLevels={levels} />)
+    // Should render listening state without crashing
+    expect(screen.getByText('Tap to pause')).toBeInTheDocument()
   })
 })

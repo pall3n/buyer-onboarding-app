@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { cache } from 'react'
 import { getAdminClient } from '@/lib/supabase/admin'
 import type { HomeBriefData, ImportanceItem } from '@/lib/demo-data'
 
@@ -76,7 +77,7 @@ export type ExtractedPreferences = z.infer<typeof ExtractedPreferencesSchema>
 
 // ─── Profile helpers ──────────────────────────────────────────────────────────
 
-export async function getOrCreateDraftProfile(
+export const getOrCreateDraftProfile = cache(async function getOrCreateDraftProfile(
   subjectId: string
 ): Promise<{ profileId: string; versionId: string }> {
   const admin = getAdminClient()
@@ -138,7 +139,7 @@ export async function getOrCreateDraftProfile(
   }
 
   return { profileId, versionId: newVersion.id as string }
-}
+})
 
 // ─── Preference upsert ────────────────────────────────────────────────────────
 
@@ -345,3 +346,4 @@ function formatPrefLabel(row: PreferenceRow): string {
   if (val !== undefined && val !== null) return `${row.category}: ${String(val)}`
   return `${row.category} / ${row.key}`
 }
+
