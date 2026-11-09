@@ -2,6 +2,8 @@
 // Separate from seed/demo.ts (DB seed). Used only for client-side rendering.
 // All entities are fictional demo data; no real names or properties.
 
+import type { FeedbackSummary } from '@/features/feedback/index'
+
 // ─── Fixed navigation IDs ──────────────────────────────────────────────────
 
 export const DEMO_NAV_IDS = {
@@ -12,6 +14,7 @@ export const DEMO_NAV_IDS = {
   briefLarkfield: 'demo-brief-larkfield',
   convMaya: 'demo-conv-maya',
   inviteMaya: 'demo-invite-maya',
+  feedbackLarkfield: 'demo-feedback-larkfield',
 } as const
 
 // ─── Shared types ──────────────────────────────────────────────────────────
@@ -734,4 +737,22 @@ export const DEMO_VIEWING_BRIEF_DRAFT: ViewingBriefDraftJson = {
   conflictLabels: [],
   profileVersionDate: '29 Oct',
   propertyRevisionDate: '30 Oct',
+}
+
+// ─── Demo feedback fixture ─────────────────────────────────────────────────
+
+export const DEMO_FEEDBACK_STATE: FeedbackSummary = {
+  viewingId: 'demo-viewing-larkfield',
+  viewingDate: '2026-11-08',
+  inviteId: DEMO_NAV_IDS.feedbackLarkfield,
+  inviteStatus: 'completed',
+  inviteExpiresAt: '2026-11-22T00:00:00.000Z',
+  feedback: {
+    positives: "The garden is exactly what we hoped for — completely private and so much bigger than the photos suggested. The original features in the sitting room were stunning. Bramble would absolutely love it.",
+    concerns: "The fourth bedroom is tiny and wouldn't work as a proper office. The side passage felt a bit exposed — we'd want to understand the arrangement better before proceeding.",
+    interestLevel: 'yes',
+    wouldChange: "We'd probably convert the small bedroom into a dressing room rather than try to use it as a desk space. The kitchen is fine but we'd update it over time.",
+    nextSteps: 'second_viewing',
+    submittedAt: '2026-11-08T18:42:00.000Z',
+  },
 }

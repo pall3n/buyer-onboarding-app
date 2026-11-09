@@ -1,12 +1,15 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { PrintActions } from '@/components/agency/PrintActions'
 import { TrustBadge } from '@/components/shared/TrustBadge'
 import { requireAgentAuth } from '@/lib/auth/index'
 import { revalidatePath } from 'next/cache'
 import { loadViewingBrief, saveViewingBriefNotes } from '@/features/viewing-briefs/index'
+import { createViewingAndInvite, loadFeedbackForBrief } from '@/features/feedback/index'
+import type { FeedbackSummary } from '@/features/feedback/index'
 import {
   DEMO_VIEWING_BRIEF_DRAFT,
+  DEMO_FEEDBACK_STATE,
   DEMO_NAV_IDS,
   type ViewingBriefDraftJson,
 } from '@/lib/demo-data'
@@ -77,18 +80,32 @@ async function saveNotesAction(briefId: string, agencyId: string, formData: Form
   revalidatePath(`/viewing-briefs/${briefId}`)
 }
 
+async function createFeedbackAction(briefId: string, agencyId: string, formData: FormData) {
+  'use server'
+  const viewingDate = formData.get('viewing_date')?.toString()
+  if (!viewingDate) return
+  const { rawToken } = await createViewingAndInvite(briefId, viewingDate, agencyId)
+  redirect(`/viewing-briefs/${briefId}?newFeedback=${rawToken}`)
+}
+
 export default async function ViewingBriefPage(
-  props: { params: Promise<{ briefId: string }> }
+  props: {
+    params: Promise<{ briefId: string }>
+    searchParams: Promise<{ newFeedback?: string }>
+  }
 ) {
   const { briefId } = await props.params
+  const searchParams = await props.searchParams
   const isDemo = briefId.startsWith('demo-')
 
   let draft: ViewingBriefDraftJson
   let notes: string | null = null
   let agencyId = ''
+  let feedbackState: FeedbackSummary | null = null
 
   if (isDemo) {
     draft = DEMO_VIEWING_BRIEF_DRAFT
+    feedbackState = DEMO_FEEDBACK_STATE
   } else {
     const agent = await requireAgentAuth()
     agencyId = agent.agencyId
@@ -96,6 +113,7 @@ export default async function ViewingBriefPage(
     if (!result) notFound()
     draft = result.draft
     notes = result.notes
+    feedbackState = await loadFeedbackForBrief(briefId, agencyId)
   }
 
   const copyText = buildCopyText(draft)
@@ -104,6 +122,15 @@ export default async function ViewingBriefPage(
     : '/buyers'
 
   const saveNotes = isDemo ? null : saveNotesAction.bind(null, briefId, agencyId)
+  const createFeedback = isDemo ? null : createFeedbackAction.bind(null, briefId, agencyId)
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  const rawFeedbackToken = Array.isArray(searchParams.newFeedback)
+    ? searchParams.newFeedback[0]
+    : searchParams.newFeedback
+  const newFeedbackUrl = rawFeedbackToken
+    ? `${appUrl}/feedback/${rawFeedbackToken}`
+    : null
 
   return (
     <div className="min-h-screen bg-[var(--bi-background)]">
@@ -329,6 +356,115 @@ export default async function ViewingBriefPage(
               </button>
             </form>
           )}
+        </div>
+
+        {/* Post-viewing feedback — excluded from print */}
+        <div className="mt-8 print:hidden">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--bi-muted)] mb-3">
+            Post-viewing
+          </h2>
+
+          {/* Show newly created feedback URL */}
+          {newFeedbackUrl && (
+            <div className="rounded-xl border border-[var(--bi-sage)] bg-[var(--bi-surface)] px-4 py-4 space-y-2">
+              <p className="text-sm font-medium text-[var(--bi-ink)]">Feedback link created</p>
+              <p className="text-xs text-[var(--bi-muted)]">Share this link with the buyer — it expires in 14 days.</p>
+              <input
+                readOnly
+                value={newFeedbackUrl}
+                className="w-full rounded-lg border border-[var(--bi-line)] bg-[var(--bi-surface-soft)] px-3 py-2 text-xs text-[var(--bi-ink)] font-mono focus:outline-none"
+                onClick={e => (e.target as HTMLInputElement).select()}
+              />
+            </div>
+          )}
+
+          {/* Feedback already submitted — show summary */}
+          {!newFeedbackUrl && feedbackState?.inviteStatus === 'completed' && feedbackState.feedback && (
+            <div className="rounded-xl border border-[var(--bi-line)] bg-[var(--bi-surface)] divide-y divide-[var(--bi-line)]">
+              <div className="px-4 py-3 flex items-center justify-between">
+                <p className="text-xs text-[var(--bi-muted)]">
+                  Viewing {new Date(feedbackState.viewingDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </p>
+                <span className="rounded-full bg-[var(--bi-sage)] px-2 py-0.5 text-[10px] font-semibold text-white uppercase tracking-wide">
+                  {feedbackState.feedback.interestLevel === 'yes' ? 'Interested'
+                    : feedbackState.feedback.interestLevel === 'maybe' ? 'Maybe'
+                    : feedbackState.feedback.interestLevel === 'no' ? 'Not right for them'
+                    : 'Responded'}
+                </span>
+              </div>
+              {feedbackState.feedback.positives && (
+                <div className="px-4 py-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--bi-muted)]">What stood out</p>
+                  <p className="mt-1 text-sm text-[var(--bi-ink)] leading-relaxed">{feedbackState.feedback.positives}</p>
+                </div>
+              )}
+              {feedbackState.feedback.concerns && (
+                <div className="px-4 py-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--bi-muted)]">Concerns</p>
+                  <p className="mt-1 text-sm text-[var(--bi-ink)] leading-relaxed">{feedbackState.feedback.concerns}</p>
+                </div>
+              )}
+              {feedbackState.feedback.wouldChange && (
+                <div className="px-4 py-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--bi-muted)]">Would change or compromise on</p>
+                  <p className="mt-1 text-sm text-[var(--bi-ink)] leading-relaxed">{feedbackState.feedback.wouldChange}</p>
+                </div>
+              )}
+              {feedbackState.feedback.nextSteps && (
+                <div className="px-4 py-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--bi-muted)]">Next steps</p>
+                  <p className="mt-1 text-sm text-[var(--bi-ink)]">
+                    {feedbackState.feedback.nextSteps === 'second_viewing' ? 'Wants a second viewing'
+                      : feedbackState.feedback.nextSteps === 'discuss' ? 'Wants to discuss options'
+                      : feedbackState.feedback.nextSteps === 'not_right' ? 'Not right for them'
+                      : 'Undecided'}
+                  </p>
+                </div>
+              )}
+              <div className="px-4 py-2">
+                <p className="text-[10px] text-[var(--bi-muted)] italic">
+                  Buyer feedback reflects this specific viewing. It is not automatically applied to their home brief.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Awaiting response */}
+          {!newFeedbackUrl && feedbackState && feedbackState.inviteStatus !== 'completed' && feedbackState.inviteStatus !== 'revoked' && (
+            <div className="rounded-xl border border-[var(--bi-line)] bg-[var(--bi-surface)] px-4 py-4 space-y-1">
+              <p className="text-sm font-medium text-[var(--bi-ink)]">Awaiting buyer response</p>
+              <p className="text-xs text-[var(--bi-muted)]">
+                Link expires {new Date(feedbackState.inviteExpiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}.
+              </p>
+            </div>
+          )}
+
+          {/* No viewing yet — create form */}
+          {!newFeedbackUrl && !feedbackState && !isDemo && createFeedback && (
+            <form action={createFeedback} className="flex items-end gap-3">
+              <div className="flex-1 space-y-1">
+                <label htmlFor="viewing_date" className="block text-xs text-[var(--bi-muted)]">
+                  Viewing date
+                </label>
+                <input
+                  id="viewing_date"
+                  name="viewing_date"
+                  type="date"
+                  required
+                  defaultValue={new Date().toISOString().split('T')[0]}
+                  className="w-full rounded-xl border border-[var(--bi-line)] bg-[var(--bi-surface)] px-3 py-2 text-sm text-[var(--bi-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--bi-sage)]"
+                />
+              </div>
+              <button
+                type="submit"
+                className="rounded-xl border border-[var(--bi-line)] px-4 py-2 text-sm text-[var(--bi-muted)] hover:text-[var(--bi-ink)] hover:border-[var(--bi-ink)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--bi-sage)] whitespace-nowrap"
+              >
+                Create feedback link
+              </button>
+            </form>
+          )}
+
+          {/* Demo — no viewing yet state not shown; demo always shows completed feedback */}
         </div>
 
       </div>

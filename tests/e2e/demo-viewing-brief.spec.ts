@@ -47,4 +47,26 @@ test.describe('Demo viewing brief — Screen G', () => {
     await expect(page.getByRole('button', { name: 'PDF' })).toBeDisabled()
     await expect(page.getByRole('button', { name: 'Share' })).toBeDisabled()
   })
+
+  test('post-viewing feedback summary is visible in demo', async ({ page }) => {
+    await expect(page.getByText('POST-VIEWING', { exact: false }).or(page.getByText('Post-viewing', { exact: false }))).toBeVisible()
+    await expect(page.getByText('What stood out')).toBeVisible()
+  })
+})
+
+test.describe('Demo buyer feedback form', () => {
+  test('feedback form loads for demo token', async ({ page }) => {
+    await page.goto('/feedback/demo-feedback-larkfield')
+    await expect(page.getByText('Larkfield House')).toBeVisible()
+    await expect(page.getByText('Post-viewing feedback')).toBeVisible()
+  })
+
+  test('all five questions are present', async ({ page }) => {
+    await page.goto('/feedback/demo-feedback-larkfield')
+    await expect(page.getByText('What stood out positively')).toBeVisible()
+    await expect(page.getByText("What didn't work")).toBeVisible()
+    await expect(page.getByText('Could you see yourselves living here')).toBeVisible()
+    await expect(page.getByText('What would you change or compromise on')).toBeVisible()
+    await expect(page.getByText('What would you like to do next')).toBeVisible()
+  })
 })
