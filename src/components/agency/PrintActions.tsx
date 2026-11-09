@@ -29,7 +29,7 @@ export function PrintActions({ copyText }: PrintActionsProps) {
       </button>
       <button
         disabled
-        title="PDF export not available in demo"
+        title="PDF export not yet available"
         aria-disabled="true"
         className="rounded-md border border-[var(--bi-line)] bg-[var(--bi-surface)] px-3 py-1.5 text-sm text-[var(--bi-muted)] cursor-not-allowed opacity-50"
       >
@@ -37,7 +37,7 @@ export function PrintActions({ copyText }: PrintActionsProps) {
       </button>
       <button
         disabled
-        title="Share not available in demo"
+        title="Share with colleague not yet available"
         aria-disabled="true"
         className="rounded-md border border-[var(--bi-line)] bg-[var(--bi-surface)] px-3 py-1.5 text-sm text-[var(--bi-muted)] cursor-not-allowed opacity-50"
       >

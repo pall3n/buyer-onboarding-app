@@ -1,10 +1,12 @@
 'use server'
 
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { TrustBadge } from '@/components/shared/TrustBadge'
 import { requireAgentAuth } from '@/lib/auth/index'
 import { loadAnalysis } from '@/features/matching/index'
+import { createBrief, loadBriefIdForBuyerAndProperty } from '@/features/viewing-briefs/index'
 import { getAdminClient } from '@/lib/supabase/admin'
 import {
   DEMO_LARKFIELD_FIT,
@@ -75,6 +77,13 @@ async function runAnalysisAction(agencyBuyerId: string, propertyId: string) {
   revalidatePath(`/buyers/${agencyBuyerId}/matches/${propertyId}`)
 }
 
+async function createBriefAction(agencyBuyerId: string, propertyId: string) {
+  'use server'
+  const agent = await requireAgentAuth()
+  const briefId = await createBrief(agencyBuyerId, propertyId, agent)
+  redirect(`/viewing-briefs/${briefId}`)
+}
+
 async function getBuyerName(agencyBuyerId: string): Promise<string> {
   const admin = getAdminClient()
   const { data } = await admin
@@ -96,6 +105,7 @@ export default async function PropertyFitPage(
 
   let fit: PropertyFitData | null = null
   let buyerName = 'Maya and James Reid'
+  let existingBriefId: string | null = null
 
   if (isDemo) {
     fit = getDemoFit(propertyId)
@@ -103,6 +113,9 @@ export default async function PropertyFitPage(
     await requireAgentAuth()
     fit = await loadAnalysis(agencyBuyerId, propertyId)
     buyerName = await getBuyerName(agencyBuyerId)
+    if (fit !== null) {
+      existingBriefId = await loadBriefIdForBuyerAndProperty(agencyBuyerId, propertyId)
+    }
   }
 
   const isLarkfield = propertyId === DEMO_PROPERTIES.larkfield.id
@@ -232,13 +245,33 @@ export default async function PropertyFitPage(
 
             {/* Actions */}
             <div className="mt-8 flex flex-wrap gap-3">
-              {isLarkfield && (
+              {/* Demo: link to static brief */}
+              {isDemo && isLarkfield && (
                 <Link
                   href={`/viewing-briefs/${DEMO_NAV_IDS.briefLarkfield}`}
                   className="inline-flex items-center rounded-xl bg-[var(--bi-ink)] px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--bi-sage)]"
                 >
                   Create viewing brief →
                 </Link>
+              )}
+              {/* Real session: open existing brief or create new one */}
+              {!isDemo && existingBriefId && (
+                <Link
+                  href={`/viewing-briefs/${existingBriefId}`}
+                  className="inline-flex items-center rounded-xl bg-[var(--bi-ink)] px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--bi-sage)]"
+                >
+                  Open viewing brief →
+                </Link>
+              )}
+              {!isDemo && !existingBriefId && (
+                <form action={createBriefAction.bind(null, agencyBuyerId, propertyId)}>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center rounded-xl bg-[var(--bi-ink)] px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--bi-sage)]"
+                  >
+                    Create viewing brief →
+                  </button>
+                </form>
               )}
               {!isDemo && (
                 <form action={runAnalysisAction.bind(null, agencyBuyerId, propertyId)}>
@@ -250,14 +283,6 @@ export default async function PropertyFitPage(
                   </button>
                 </form>
               )}
-              <button
-                disabled
-                title="Available after M2"
-                aria-disabled="true"
-                className="rounded-xl border border-[var(--bi-line)] px-4 py-2.5 text-sm text-[var(--bi-muted)] cursor-not-allowed opacity-50"
-              >
-                Send questions to Maya
-              </button>
             </div>
           </>
         )}

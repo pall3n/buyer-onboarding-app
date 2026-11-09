@@ -12,17 +12,17 @@ Build the **end-to-end flow with seeded data** before integrating real speech or
 
 ## Build sequence
 
-| Milestone | Deliverable | Prerequisites | Exit criterion |
-|---|---|---|---|
-| M0 — Review & setup | Design inventory, acceptance map, migrations proposal, repo scaffolding | Handoff + designs | Layout and data decisions documented, lint/test/build working |
-| M1 — UI shell and seeded vertical slice | Agent workspace + invitation UI + buyer onboarding stub + profile and property demo navigation | M0 | Can move through all designed screens with coherent seeded data |
-| M2 — Agency and invite persistence | Agency auth/membership, tokenized invites, safe buyer session | M1 | Can invite and resume without seeing private draft on agency side |
-| M3 — Typed conversation and visual answer flow | Topic engine, saved turns, image ratings, renovation and tradeoff questions | M2 | Text-only buyer can produce a draft profile |
-| M4 — Extraction and buyer review/share | Structured candidates, inline corrections, versions, scoped grant | M3 | Approved version appears to agency; private edits do not leak |
-| M5 — Voice experience | Live browser voice + caption state, switch to text, mic/connection errors | M3/M4 | Voice buyer can complete same flow; text fallback reliable |
-| M6 — Agent intelligence | Evidence disclosures, open questions, agency notes | M4 | Agent can review confirmed evidence only, within own tenant |
-| M7 — Property fit and viewing brief | Manual property facts, deterministic evaluator, grounded brief, print/copy | M4/M6 | Contrasting listings produce justified outcomes and a usable brief |
-| M8 — Pilot hardening | Tests, analytics, privacy, costs, observability, deployment | M2–M7 | End-to-end tests + security gates pass; can invite real pilot users |
+| Milestone | Deliverable | Prerequisites | Exit criterion | Status |
+|---|---|---|---|---|
+| M0 — Review & setup | Design inventory, acceptance map, migrations proposal, repo scaffolding | Handoff + designs | Layout and data decisions documented, lint/test/build working | ✅ Done |
+| M1 — UI shell and seeded vertical slice | Agent workspace + invitation UI + buyer onboarding stub + profile and property demo navigation | M0 | Can move through all designed screens with coherent seeded data | ✅ Done |
+| M2 — Agency and invite persistence | Agency auth/membership, tokenized invites, safe buyer session | M1 | Can invite and resume without seeing private draft on agency side | ✅ Done |
+| M3 — Typed conversation and visual answer flow | Topic engine, saved turns, image ratings, renovation and tradeoff questions | M2 | Text-only buyer can produce a draft profile | ✅ Done |
+| M4 — Extraction and buyer review/share | Structured candidates, inline corrections, versions, scoped grant | M3 | Approved version appears to agency; private edits do not leak | ✅ Done |
+| M5 — Voice experience | Live browser voice + caption state, switch to text, mic/connection errors | M3/M4 | Voice buyer can complete same flow; text fallback reliable | ✅ Done |
+| M6 — Agent intelligence | Evidence disclosures, open questions, agency notes | M4 | Agent can review confirmed evidence only, within own tenant | ✅ Done — property matching engine delivers fit breakdown with source disclosures and open questions; full agency-editable notes not yet built |
+| M7 — Property fit and viewing brief | Manual property facts, deterministic evaluator, grounded brief, print/copy | M4/M6 | Contrasting listings produce justified outcomes and a usable brief | ✅ Done — deterministic brief generator, 9-zone Screen G layout, create/open brief from Screen F, print/copy, private notes |
+| M8 — Pilot hardening | Tests, analytics, privacy, costs, observability, deployment | M2–M7 | End-to-end tests + security gates pass; can invite real pilot users | ⬜ Pending |
 
 ### Why this order?
 

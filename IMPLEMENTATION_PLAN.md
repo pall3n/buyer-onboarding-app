@@ -99,7 +99,7 @@ M1 exit criterion: can navigate the full flow —
 | **M4** | Conversation engine: text modality, preference extraction, emerging brief | ✅ Done |
 | **M5** | Voice modality: WebRTC/Realtime, server-issued ephemeral token, waveform UI | ✅ Done |
 | **M6** | Property matching: hard rules + soft signals, fit breakdown | ✅ Done |
-| **M7** | Viewing brief generation and PDF/print export | ⬜ |
+| **M7** | Viewing brief generation and PDF/print export | ✅ Done |
 | **M8** | E2E test suite, security review, performance audit, soft launch | ⬜ |
 
 ---

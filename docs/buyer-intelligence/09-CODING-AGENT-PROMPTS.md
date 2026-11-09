@@ -42,7 +42,7 @@ Working method:
 
 ---
 
-## PROMPT 0 — Inspect, scaffold and propose technical contracts — DONE
+## PROMPT 0 — Inspect, scaffold and propose technical contracts ✅ Done
 
 ```text
 Start Milestone M0. Inspect the repository; do not assume it is empty. Read the Buyer Intelligence handoff. Review all nine screenshots and their design-screen mapping. Identify existing packages, routing, auth, migrations and test setup.
@@ -62,7 +62,7 @@ Initialize the CSS token/theme foundation close to the screenshots. No AI integr
 Do not copy generated HTML. Do not include embedded font files.
 ```
 
-## PROMPT 1 — Build visual shell and seeded demo screens — DONE
+## PROMPT 1 — Build visual shell and seeded demo screens ✅ Done
 
 ```text
 Implement M1, the design foundation and navigable vertical slice, using 02-DESIGN-IMPLEMENTATION-BRIEF.md and supplied screen PNGs as visual reference.
@@ -82,7 +82,7 @@ UI copy must match its actual functionality: if “Send”, “PDF” or “Shar
 Do NOT add realtime AI, integrations, payment, listing scraping or demand insight. Add basic component/smoke tests and screenshots if available. Verify all navigation. Report fidelity gaps vs screenshots. Stop after M1.
 ```
 
-## PROMPT 2 — Auth, tenant isolation and secure invitation flow
+## PROMPT 2 — Auth, tenant isolation and secure invitation flow ✅ Done
 
 ```text
 Implement M2 from PRD-01 and architecture spec. Add Supabase/Postgres migrations (or adapt existing backend) for agencies, agency memberships, provisional buyer subjects, invitations, sessions, agency-buyer links and audit. Set up server-side auth and tenant checks.
@@ -94,7 +94,7 @@ Use unpredictable hashed invitation tokens, HttpOnly session cookies, server-sid
 Tests: invalid/revoked/expired invites, agency A cannot see agency B, no leaked buyer identity via errors, stale session and invite replay checks. Run migration/check/test/build. Stop after M2.
 ```
 
-## PROMPT 3 — Typed conversation with visual choices and persistence
+## PROMPT 3 — Typed conversation with visual choices and persistence ✅ Done
 
 ```text
 Implement M3, a fully usable text-first conversation engine. Use PRD-02 and the supplied conversation designs.
@@ -106,7 +106,7 @@ Important: unselected renovations are UNKNOWN; only explicit “not for me” be
 No agent can read provisional profile data before approval. Don't implement outbound email, voice or the future extensions. Stop after M3.
 ```
 
-## PROMPT 4 — Structured extraction, buyer review, versions and sharing
+## PROMPT 4 — Structured extraction, buyer review, versions and sharing ✅ Done
 
 ```text
 Implement M4 using PRD-03, architecture and AI/extraction spec. Create a discriminated, Zod-validated preference registry with real type-safe value models; retain source turn/visual references and confidence/confirmation status. Implement an extraction adapter that supports deterministic seeded data first and a model call behind a server-only interface if configured.
@@ -118,7 +118,7 @@ Ensure buyer edits supersede machine suggestions; do not allow candidate extract
 Tests: unauthorised draft reads, section-level sharing, unpublished edit isolation, v1/v2 snapshot stability, revocation, extraction conflict handling, and retry without data loss. Stop after M4.
 ```
 
-## PROMPT 5 — Realtime voice and resilient shared session
+## PROMPT 5 — Realtime voice and resilient shared session ✅ Done
 
 ```text
 Implement M5. Add a provider adapter for browser realtime voice (prefer the currently supported OpenAI Realtime WebRTC flow; verify SDK/API details in official documentation before coding). The server must issue short-lived scoped credentials; never ship long-lived secrets to browser.
@@ -128,7 +128,7 @@ Integrate voice into the SAME conversation state as typed turns and visual-choic
 Keep browser audio recording non-persistent by default, and document provider/transcript retention behavior. Add usable no-mic, no-permission, mid-speech disconnect and rate-limit fallback states. No calls to buyers by phone. Use mocked provider in tests, with optional real-voice manual smoke tests, plus cost/latency telemetry. Stop after M5.
 ```
 
-## PROMPT 6 — Agent buyer intelligence and trust UI
+## PROMPT 6 — Agent buyer intelligence and trust UI ✅ Done (property fit breakdown, evidence disclosures, open questions; full agency-editable notes deferred to M8)
 
 ```text
 Implement M6, the agent buyer intelligence page using PRD-04 and screenshot 06. Data must come only from explicitly approved shared profile versions, not the raw buyer draft.
@@ -138,7 +138,7 @@ Build summary, budget/location/bedrooms/timing, priorities, dealbreakers, lifest
 Implement appropriate responsive sidebar/rail and keyboard interactions. The design reference mentions a hidden item; never expose the existence/count of withheld preferences. Add security tests across tenants and scopes; visual/mobile tests. Stop after M6.
 ```
 
-## PROMPT 7 — Deterministic property matching and explanations
+## PROMPT 7 — Deterministic property matching and explanations ✅ Done
 
 ```text
 Implement M7a using PRD-05 and 05-AI-VOICE-AND-MATCHING.md. Add agency-scoped manual property records plus revisioned typed fact sources, verification flags and fictional seeded listings Larkfield House, 4 Ashgrove Place, Flat 3 Calverley Court.
@@ -148,7 +148,7 @@ Create a deterministic evaluator for confirmed hard requirements and explainable
 Ensure Ashgrove is a conflict because of overlooked garden, while Larkfield is a lifestyle match with unresolved security details. Do not fake walking times as verified live facts. Add thorough unit tests for budget, bedrooms, skipped values, contradictory preferences, stale versions, unverified sources and cross-tenant requests. Stop after M7a.
 ```
 
-## PROMPT 8 — Viewing brief and print experience
+## PROMPT 8 — Viewing brief and print experience ✅ Done
 
 ```text
 Implement M7b using PRD-06 and screenshot 08. From a saved, authorised analysis generate a viewing brief as an editable structured document with buyer snapshot, relevant features, three things to show, objections, local evidence, checks, questions and private agency notes. Include source and profile/property version metadata.
@@ -158,7 +158,7 @@ Match the supplied editorial visual style. Implement real copy and print with a 
 Unknown footpaths, walk times and garden boundaries must be presented as needs-check, not verified. Show conflict warnings even if an agent intentionally produces a viewing brief. Persist edits and audit significant actions. Add export/private-note and version snapshot tests. Stop after M7b.
 ```
 
-## PROMPT 9 — Pilot hardening and regression suite
+## PROMPT 9 — Pilot hardening and regression suite ⬜ Pending
 
 ```text
 Implement M8 guided by 08-ACCEPTANCE-AND-EVALUATION.md. Audit all server queries for actor/tenant/share/version authorization, including anonymous buyer flow and API endpoints. Add E2E for buyer invite → text/visual conversation → edit → approve → agent profile → Larkfield/Ashgrove comparison → printed brief.

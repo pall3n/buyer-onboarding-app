@@ -122,6 +122,32 @@ export interface ViewingBriefData {
   sections: ViewingBriefSection[]
 }
 
+export interface ViewingBriefDraftJson {
+  version: 1
+  profileVersionId: string
+  propertyRevision: number
+  generatedAt: string
+  buyerName: string
+  propertyName: string
+  propertyAddress: string
+  propertyPrice: string
+  agentName: string
+  agencyName: string
+  buyerSnapshot: string
+  whatTheyCareAbout: string[]
+  wontConsider: string[]
+  whyItMaySuit: string
+  threeThingsToShow: Array<{ title: string; description: string }>
+  localEvidence: Array<{ label: string; status: TrustStatus; source: string }>
+  beUpfrontAbout: Array<{ title: string; description: string }>
+  checkBeforeViewing: Array<{ item: string; done: boolean }>
+  questionsToAsk: string[]
+  hasConflicts: boolean
+  conflictLabels: string[]
+  profileVersionDate: string
+  propertyRevisionDate: string
+}
+
 // ─── Agency & agent ────────────────────────────────────────────────────────
 
 export const DEMO_AGENCY = {
@@ -633,4 +659,79 @@ export const DEMO_VIEWING_BRIEF: ViewingBriefData = {
       ],
     },
   ],
+}
+
+// ─── Demo viewing brief (rich format for Screen G) ─────────────────────────
+
+export const DEMO_VIEWING_BRIEF_DRAFT: ViewingBriefDraftJson = {
+  version: 1,
+  profileVersionId: 'demo-version-1',
+  propertyRevision: 1,
+  generatedAt: '2024-10-30T09:00:00.000Z',
+  buyerName: 'Maya and James Reid',
+  propertyName: 'Larkfield House',
+  propertyAddress: 'Larkfield House, TN15 7PQ',
+  propertyPrice: '£725,000',
+  agentName: 'Sophie Lane',
+  agencyName: 'Hartfield & Rowe',
+  buyerSnapshot:
+    'Maya and James Reid are looking for a 4-bedroom house in Sevenoaks with a budget of up to £800,000. A private garden is a non-negotiable requirement.',
+  whatTheyCareAbout: [
+    '80ft south-facing rear garden with solid panel fencing and a lockable gate.',
+    '5-minute walk to Sevenoaks high street. Supermarket 3 minutes.',
+    'Victorian semi-detached with original cornicing, cast-iron fireplaces and sash windows throughout.',
+    'Four bedrooms — meets the 3+ requirement with one room to spare.',
+    'Guide price £725,000 within the £650k–£800k range.',
+  ],
+  wontConsider: [
+    'An overlooked or insecure garden — Bramble must not be able to escape.',
+    'Extensions or structural work beyond kitchen/bathroom.',
+    'A main road frontage with no acoustic buffer.',
+  ],
+  whyItMaySuit:
+    "Larkfield House's secure private garden and walkable town-centre location align directly with Maya and James's two most important requirements.",
+  threeThingsToShow: [
+    {
+      title: 'Secure private garden',
+      description:
+        '80ft south-facing rear garden with solid panel fencing and a lockable gate. — Estate agent confirmed; vendor notes',
+    },
+    {
+      title: 'Walkable town centre',
+      description:
+        '5-minute walk to Sevenoaks high street. Supermarket 3 minutes. — Walk score analysis',
+    },
+    {
+      title: 'Period character',
+      description:
+        'Victorian semi-detached. Original cornicing, cast-iron fireplaces, sash windows throughout. — Property listing; agent notes',
+    },
+  ],
+  localEvidence: [
+    {
+      label: 'Shared side passage arrangement',
+      status: 'unknown',
+      source: 'Title register note',
+    },
+    {
+      label: 'Rear fence condition',
+      status: 'unknown',
+      source: 'Listing photos only',
+    },
+  ],
+  beUpfrontAbout: [],
+  checkBeforeViewing: [
+    { item: 'Confirm: Shared side passage arrangement', done: false },
+    { item: 'Confirm: Rear fence condition', done: false },
+  ],
+  questionsToAsk: [
+    'Is the rear garden fully enclosed — can Bramble not escape under the fence?',
+    'What is the shared side-passage arrangement, and does it affect privacy?',
+    'Has the fence been recently maintained or replaced?',
+    'What heating system is installed, and when was it last serviced?',
+  ],
+  hasConflicts: false,
+  conflictLabels: [],
+  profileVersionDate: '29 Oct',
+  propertyRevisionDate: '30 Oct',
 }
