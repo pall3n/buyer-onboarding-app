@@ -103,6 +103,7 @@ M1 exit criterion: can navigate the full flow —
 | **M8** | E2E test suite, security review, performance audit, soft launch | ✅ Done |
 | **Ext A** | Post-viewing feedback portal: invite token, buyer form, agent summary (Screen G) | ✅ Done |
 | **Ext B** | Buyer shortlist for new listings: eligibility, draft message, human review (Screen H) | ✅ Done |
+| **Ext C** | Buyer Demand Radar: aggregate demand snapshot, suppression gates, seller pitch (Screen I) | ✅ Done |
 
 ---
 

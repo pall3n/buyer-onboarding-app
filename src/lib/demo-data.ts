@@ -4,6 +4,7 @@
 
 import type { FeedbackSummary } from '@/features/feedback/index'
 import type { OutreachCandidate, PropertyShortlist } from '@/features/outreach/index'
+import type { DemandSnapshot } from '@/features/demand/index'
 
 // ─── Fixed navigation IDs ──────────────────────────────────────────────────
 
@@ -836,4 +837,47 @@ export const DEMO_SHORTLIST: PropertyShortlist = {
   propertyPrice: '£725,000',
   candidates: DEMO_CANDIDATES,
   builtAt: '2026-11-09T09:00:00.000Z',
+}
+
+// ─── Demo demand snapshot ──────────────────────────────────────────────────
+
+const DEMO_DISCLAIMER =
+  "These figures represent indications of buyer preferences recorded with this agency. " +
+  "They are not offers, guarantees of purchase, valuations, or confirmations of any " +
+  "buyer's financial qualification. Buyer searches may change, lapse, or be withdrawn " +
+  "at any time. This snapshot should not be presented as a confirmed list of purchasers."
+
+export const DEMO_DEMAND_SNAPSHOT: DemandSnapshot = {
+  asOf: '2026-11-09T09:00:00.000Z',
+  agencyName: 'Hartfield & Rowe',
+  totalActiveBuyers: 14,
+  suppressed: false,
+  byArea: [
+    { label: 'Tunbridge Wells / TN1–TN4', count: 8 },
+    { label: 'Sevenoaks / TN13–TN15', count: null }, // < 3 — suppressed
+    { label: 'Tonbridge / TN9–TN12', count: 3 },
+  ],
+  byBudget: [
+    { label: '£500,000 – £700,000', count: 6 },
+    { label: '£700,000 – £900,000', count: 5 },
+    { label: 'Up to £500,000', count: null },      // < 3 — suppressed
+    { label: 'Over £900,000', count: null },        // < 3 — suppressed
+  ],
+  byBedrooms: [
+    { label: '3 bedrooms', count: 7 },
+    { label: '4 bedrooms', count: 4 },
+    { label: '2 bedrooms', count: null },           // < 3 — suppressed
+    { label: '5+ bedrooms', count: null },          // < 3 — suppressed
+  ],
+  gardenDemand: {
+    count: 9,
+    note: 'Buyers with an explicit garden requirement',
+  },
+  exclusions: {
+    inactive: 3,
+    staleProfile: 2,
+    noApprovedProfile: 1,
+  },
+  source: 'demo',
+  disclaimer: DEMO_DISCLAIMER,
 }
