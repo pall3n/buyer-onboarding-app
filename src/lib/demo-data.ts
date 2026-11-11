@@ -5,6 +5,7 @@
 import type { FeedbackSummary } from '@/features/feedback/index'
 import type { OutreachCandidate, PropertyShortlist } from '@/features/outreach/index'
 import type { DemandSnapshot } from '@/features/demand/index'
+import type { BuyerGrant } from '@/features/buyer-account/index'
 
 // ─── Fixed navigation IDs ──────────────────────────────────────────────────
 
@@ -881,3 +882,28 @@ export const DEMO_DEMAND_SNAPSHOT: DemandSnapshot = {
   source: 'demo',
   disclaimer: DEMO_DISCLAIMER,
 }
+
+// ─── Demo buyer grants ────────────────────────────────────────────────────────
+
+export const DEMO_BUYER_GRANTS: BuyerGrant[] = [
+  {
+    shareId: 'demo-share-hartfield',
+    agencyId: 'demo-agency-hartfield',
+    agencyName: 'Hartfield & Rowe',
+    status: 'active',
+    approvedVersionId: 'demo-version-v3',
+    approvedVersionDate: '2026-10-29T14:00:00.000Z',
+    grantedAt: '2026-09-10T09:00:00.000Z',
+    revokedAt: null,
+  },
+  {
+    shareId: 'demo-share-other',
+    agencyId: 'demo-agency-other',
+    agencyName: 'Meadowbrook Properties',
+    status: 'revoked',
+    approvedVersionId: 'demo-version-v1',
+    approvedVersionDate: '2026-08-01T10:00:00.000Z',
+    grantedAt: '2026-07-15T11:00:00.000Z',
+    revokedAt: '2026-09-01T16:00:00.000Z',
+  },
+]

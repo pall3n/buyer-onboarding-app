@@ -104,6 +104,7 @@ M1 exit criterion: can navigate the full flow —
 | **Ext A** | Post-viewing feedback portal: invite token, buyer form, agent summary (Screen G) | ✅ Done |
 | **Ext B** | Buyer shortlist for new listings: eligibility, draft message, human review (Screen H) | ✅ Done |
 | **Ext C** | Buyer Demand Radar: aggregate demand snapshot, suppression gates, seller pitch (Screen I) | ✅ Done |
+| **Ext D** | Portable buyer account: verified claim flow, grants dashboard, revocation, Somewhere isolation (Screens J/K) | ✅ Done |
 
 ---
 
